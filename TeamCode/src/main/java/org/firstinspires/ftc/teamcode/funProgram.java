@@ -53,7 +53,6 @@ public class funProgram extends OpMode{
         rfront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         lback.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         rback.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        firstStage.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.COAST);
         secondStage.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
 

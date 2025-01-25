@@ -22,19 +22,16 @@ public class funProgram extends OpMode{
     private DcMotor secondStage;
     private Servo claw;
     private PIDController firstStageController;
-    private PIDController secondStageController;
     public static double p1=0, i1=0, d1=0;
     public static double f1 = 0;
-    public static double p2=0, i2=0, d2=0;
-    public static double f2 = 0;
 
     public static int target1 = 0;
-    public static int target2 =0;
+    public static int secondStagePOS =0;
     private final double ticks_in_degree = 1.6306513409961;
+    public static double secondStagePower = 0;
 
     public void init(){
         firstStageController = new PIDController(p1,i1,d1);
-        secondStageController = new PIDController (p2, i2,d2);
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
         lfront = hardwareMap.get(DcMotor.class, "left_front");
         rfront = hardwareMap.get(DcMotor.class, "right_front");
@@ -43,10 +40,12 @@ public class funProgram extends OpMode{
         firstStage = hardwareMap.get(DcMotor.class, "shoulder");
        secondStage = hardwareMap.get(DcMotor.class, "elbow");
         claw = hardwareMap.get(Servo.class,  "claw");
-        secondStage.setPower(0.25);
-        
-        secondStage.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         firstStage.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        secondStage.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        firstStage.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+
+
 
         rback.setDirection(DcMotor.Direction.REVERSE);
         rfront.setDirection(DcMotor.Direction.REVERSE);
@@ -54,7 +53,7 @@ public class funProgram extends OpMode{
         rfront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         lback.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         rback.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        firstStage.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        firstStage.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.COAST);
         secondStage.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
 
@@ -102,23 +101,20 @@ public class funProgram extends OpMode{
 
         //PID Stuff
         firstStageController.setPID(p1,i1,d1);
-        secondStageController.setPID(p2,i2,d2);
         int firstStagePos = firstStage.getCurrentPosition();
-        int secondStagePos =firstStage.getCurrentPosition();
         double pid1 = firstStageController.calculate(firstStagePos,target1);
-        double pid2 = secondStageController.calculate(secondStagePos,target2);
         double ff1 = Math.cos(Math.toRadians(target1 / ticks_in_degree))*f1;
-        double ff2 = Math.cos(Math.toRadians(target2 / ticks_in_degree))*f2;
         double power1 = pid1 + ff1;
-        double power2 = pid2 + ff2;
+
+        // Encoders for Second Stage
+        secondStage.setTargetPosition(secondStagePOS);
+        secondStage.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        secondStage.setPower(secondStagePower);
 
         firstStage.setPower(power1);
-        secondStage.setPower(power2);
         telemetry.addData("pos1",firstStagePos);
-        telemetry.addData("pos2", secondStagePos);
 
         telemetry.addData("target", target1);
-        telemetry.addData("target2", target2);
 
 
 
@@ -147,10 +143,8 @@ public class funProgram extends OpMode{
            i1=0;
            d1=0;
            target1=0;
-           p2=0;
-           i2=0;
-           d2=0;
-           target2=0;
+
+
         }
 
 

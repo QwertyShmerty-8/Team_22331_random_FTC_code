@@ -25,10 +25,11 @@ public class funProgram extends OpMode{
     public static double p1=0, i1=0, d1=0;
     public static double f1 = 0;
 
-    public static int target1 = 0;
+    public static double target1 = 0;
     public static int secondStagePOS =0;
     private final double ticks_in_degree = 1.6306513409961;
     public static double secondStagePower = 0;
+
 
     public void init(){
         firstStageController = new PIDController(p1,i1,d1);
@@ -42,7 +43,7 @@ public class funProgram extends OpMode{
         claw = hardwareMap.get(Servo.class,  "claw");
         firstStage.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         secondStage.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        firstStage.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        firstStage.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
 
 
@@ -54,6 +55,7 @@ public class funProgram extends OpMode{
         lback.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         rback.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         secondStage.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        firstStage.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
 
 
@@ -114,6 +116,10 @@ public class funProgram extends OpMode{
         telemetry.addData("pos1",firstStagePos);
 
         telemetry.addData("target", target1);
+
+        //Graphing the position of the second stage encoder
+        int secondStageEncoderValue = secondStage.getCurrentPosition();
+        telemetry.addData("Second Stage encoder value",secondStageEncoderValue);
 
 
 

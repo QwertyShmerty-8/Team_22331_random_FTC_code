@@ -25,10 +25,12 @@ public class funProgram extends OpMode{
     public static double p1=0, i1=0, d1=0;
     public static double f1 = 0;
 
+
     public static double target1 = 0;
     public static int secondStagePOS =0;
     private final double ticks_in_degree = 1.6306513409961;
     public static double secondStagePower = 0;
+    public static int controlInput = 0;
 
 
     public void init(){
@@ -56,6 +58,12 @@ public class funProgram extends OpMode{
         rback.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         secondStage.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         firstStage.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+
+        /*
+        }*/
+
+
 
 
 
@@ -100,6 +108,8 @@ public class funProgram extends OpMode{
         boolean left2 = gamepad2.dpad_left;
         boolean right2 = gamepad2.dpad_right;
 
+
+
         //PID Stuff
         firstStageController.setPID(p1,i1,d1);
         int firstStagePos = firstStage.getCurrentPosition();
@@ -108,9 +118,9 @@ public class funProgram extends OpMode{
         double power1 = pid1 + ff1;
 
         // Encoders for Second Stage
-        secondStage.setTargetPosition(secondStagePOS);
-        secondStage.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        secondStage.setPower(secondStagePower);
+        //secondStage.setTargetPosition(secondStagePOS);
+        //secondStage.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        //secondStage.setPower(secondStagePower);
 
         firstStage.setPower(power1);
         telemetry.addData("pos1",firstStagePos);
@@ -143,6 +153,29 @@ public class funProgram extends OpMode{
         } else{
             claw.setPosition(0);
         }
+        //Moving from Back Forward
+        boolean out = false;
+        if(controlInput == 1) {
+            if(out==false) {
+                secondStage.setTargetPosition(-120);
+                secondStage.setPower(0.1);
+                secondStage.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                out = true;
+            }
+
+            if(out ==true) {
+                secondStage.setPower(0.7);
+                secondStage.setTargetPosition(240);
+                secondStage.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+                /*
+
+                    secondStage.setPower(0.1);
+                    secondStage.setTargetPosition(150);
+                    secondStage.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                */
+            }
+        }
         if (rt2>0.5){
            p1=0;
            i1=0;
@@ -151,6 +184,10 @@ public class funProgram extends OpMode{
 
 
         }
+
+
+
+
 
 
 

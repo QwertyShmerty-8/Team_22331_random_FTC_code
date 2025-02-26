@@ -6,6 +6,7 @@ import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.arcrobotics.ftclib.controller.PIDController;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 
@@ -23,29 +24,32 @@ public class funProgram extends OpMode{
     private Servo claw;
     private PIDController firstStageController;
     public static double p1=0, i1=0, d1=0;
-    public static double f1 = 0;
+    private PIDController secondStageController;
+    public static double p2=0, i2=0, d2=0;
+
 
 
     public static double target1 = 0;
-    public static int secondStagePOS =0;
+    public static double target2 =0;
     private final double ticks_in_degree = 1.6306513409961;
-    public static double secondStagePower = 0;
-    public static int controlInput = 0;
-
+    private int actualValue;
+    private int actualValue1;
 
     public void init(){
         firstStageController = new PIDController(p1,i1,d1);
+        secondStageController = new PIDController(p2,i2,d2);
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
         lfront = hardwareMap.get(DcMotor.class, "left_front");
         rfront = hardwareMap.get(DcMotor.class, "right_front");
         lback = hardwareMap.get(DcMotor.class, "left_back");
         rback = hardwareMap.get(DcMotor.class, "right_back");
-        firstStage = hardwareMap.get(DcMotor.class, "shoulder");
-       secondStage = hardwareMap.get(DcMotor.class, "elbow");
+        firstStage = hardwareMap.get(DcMotor.class, "first");
+       secondStage = hardwareMap.get(DcMotor.class, "second");
         claw = hardwareMap.get(Servo.class,  "claw");
-        firstStage.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        secondStage.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        firstStage.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        AnalogInput encoder2 = hardwareMap.get(AnalogInput.class, "encoder2");
+        AnalogInput encoder = hardwareMap.get(AnalogInput.class, "encoder");
+
+        telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
 
 
 
@@ -58,6 +62,8 @@ public class funProgram extends OpMode{
         rback.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         secondStage.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         firstStage.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        actualValue = (int) ((encoder2.getVoltage() / 3.2 * 360) % 360);
+        actualValue1 = (int) ((encoder.getVoltage() / 3.2 * 360) % 360);
 
 
         /*
@@ -76,9 +82,9 @@ public class funProgram extends OpMode{
         double ltx = gamepad1.left_stick_x;
         double lty = gamepad1.left_stick_y;
         boolean circle = gamepad1.circle;
-        boolean cross = gamepad1.x;
-        boolean square = gamepad1.y;
-        boolean triangle = gamepad1.b; //triangle is used for test claw
+        boolean xb = gamepad1.x;
+        boolean yb = gamepad1.y;
+        boolean bb = gamepad1.b; //triangle is used for test claw
         boolean lbumper = gamepad1.left_bumper;
         boolean rbumper = gamepad1.right_bumper;
         double lt = gamepad1.left_trigger;
@@ -107,29 +113,50 @@ public class funProgram extends OpMode{
         boolean down2 = gamepad2.dpad_down;
         boolean left2 = gamepad2.dpad_left;
         boolean right2 = gamepad2.dpad_right;
+        AnalogInput encoder = hardwareMap.get(AnalogInput.class, "encoder");
+
+        int offset1 = 350; // This changes the initial position of the encoder.
+        // To find offset, Subtract the encoder value at start State
+
+        int position1 = (int) ((encoder.getVoltage() / 3.2 * 360 + offset1) % 360);
+        telemetry.addData("angle1:", position1);
+        AnalogInput encoder2 = hardwareMap.get(AnalogInput.class, "encoder2");
+        // encoder 2 (elbow) (stage 2)
+
+        int offset2 = -(actualValue-5) + 360;
+        // To find offset, Subtract the encoder value at start State
+
+        int position2 = (int) ((encoder2.getVoltage() / 3.2 * 360 + offset2) % 360);
+        telemetry.addData("angle2:", position2);
+        telemetry.addData("angle2Pos:", (encoder2.getVoltage() / 3.2 * 360) % 360);
+
+
+
 
 
 
         //PID Stuff
         firstStageController.setPID(p1,i1,d1);
         int firstStagePos = firstStage.getCurrentPosition();
-        double pid1 = firstStageController.calculate(firstStagePos,target1);
-        double ff1 = Math.cos(Math.toRadians(target1 / ticks_in_degree))*f1;
-        double power1 = pid1 + ff1;
-
-        // Encoders for Second Stage
-        //secondStage.setTargetPosition(secondStagePOS);
-        //secondStage.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        //secondStage.setPower(secondStagePower);
-
+        double pid1 = firstStageController.calculate(position1,target1);
+        double power1 = pid1;
         firstStage.setPower(power1);
-        telemetry.addData("pos1",firstStagePos);
 
+
+        telemetry.addData("pos1",position1);
         telemetry.addData("target", target1);
 
-        //Graphing the position of the second stage encoder
-        int secondStageEncoderValue = secondStage.getCurrentPosition();
-        telemetry.addData("Second Stage encoder value",secondStageEncoderValue);
+        secondStageController.setPID(p2,i2,d2);
+        int secondStagePos = secondStage.getCurrentPosition();
+        double pid2 = secondStageController.calculate(position2,target2);
+        double power2 = -pid2;
+        secondStage.setPower(power2);
+
+        telemetry.addData("pos2",position2);
+        telemetry.addData("target2", target2);
+
+
+
 
 
 
@@ -148,42 +175,10 @@ public class funProgram extends OpMode{
         rfront.setPower(fright);
         lback.setPower(bleft);
         rback.setPower(bright);
-        if (b2){
-            claw.setPosition(0.5);
-        } else{
-            claw.setPosition(0);
-        }
-        //Moving from Back Forward
-        boolean out = false;
-        if(controlInput == 1) {
-            if(out==false) {
-                secondStage.setTargetPosition(-120);
-                secondStage.setPower(0.1);
-                secondStage.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                out = true;
-            }
-
-            if(out ==true) {
-                secondStage.setPower(0.7);
-                secondStage.setTargetPosition(240);
-                secondStage.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-                /*
-
-                    secondStage.setPower(0.1);
-                    secondStage.setTargetPosition(150);
-                    secondStage.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                */
-            }
-        }
-        if (rt2>0.5){
-           p1=0;
-           i1=0;
-           d1=0;
-           target1=0;
 
 
-        }
+
+
 
 
 
